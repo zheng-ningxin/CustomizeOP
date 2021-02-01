@@ -11,8 +11,7 @@ version = "0.1.1"
 ext_modules = []
 
 # Add the extral module of mkl sparse
-# mkl_sparse_ext = CppExtension(name='mkl_sparse_linear_cpp', sources=[
-mkl_sparse_ext = CUDAExtension(name='mkl_sparse_linear_cpp', sources=[
+mkl_sparse_ext = CppExtension(name='mkl_sparse_linear_cpp', sources=[
                               'mkl_sparse/mkl_spmm.cpp'],
                               extra_compile_args=['-lmkl_core', '-lmkl_rt', '-O3', '-D_GLIBCXX_USE_CXX11_ABI=0'])
 ext_modules.append(mkl_sparse_ext)
@@ -23,7 +22,7 @@ setup(
     description='The customized sparse OP for pytorch',
     author='MSRA',
     author_email="Ningxin.Zheng@microsoft.com",
-    packages=find_packages(),
+    # packages=find_packages(),
     ext_modules=ext_modules,
     cmdclass={"build_ext": BuildExtension}
 )
