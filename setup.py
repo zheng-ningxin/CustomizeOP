@@ -22,7 +22,7 @@ setup(
     description='The customized sparse OP for pytorch',
     author='MSRA',
     author_email="Ningxin.Zheng@microsoft.com",
-    # packages=find_packages(),
+    packages=find_packages(),
     ext_modules=ext_modules,
     cmdclass={"build_ext": BuildExtension}
 )

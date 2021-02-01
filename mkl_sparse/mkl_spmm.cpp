@@ -150,7 +150,7 @@ at::Tensor mkl_sparse_linear_forward(
                                        static_cast<scalar_t>(1));
                                }));
     // need transpose again
-    return t_output.t();
+    return t_output.t() + bias;
 }
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
