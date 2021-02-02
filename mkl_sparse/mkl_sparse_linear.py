@@ -11,7 +11,7 @@ class sparse_linear(torch.nn.Module):
         self.out_features = ori_linear.out_features
         self.in_features = ori_linear.in_features
         self.row_index, self.col_index, self.values = self.convert_csr(
-            ori_linear.data)
+            ori_linear.weight.data)
         self.bias = ori_linear.bias
 
     def forward(self, data):
@@ -25,7 +25,7 @@ class sparse_linear(torch.nn.Module):
         Convert the sparse tensor into the CSR format.
         Note: the values that lower than given threshold in the data will be taken as the sparsity.
         """
-        assert len(data.size() == 2), 'Only support the two-dimension data'
+        assert len(data.size()) == 2, 'Only support the two-dimension data'
         with torch.no_grad():
             sparsity_pos = torch.abs(data) < threshold
             row_idx = []
@@ -40,7 +40,7 @@ class sparse_linear(torch.nn.Module):
                     col_idx.append(j)
                     values.append(data.data[i][j])
         row_idx, col_idx, values = torch.tensor(
-            row_idx), torch.tensor(col_idx), torch.tensor(values)
+            row_idx).to(torch.int32), torch.tensor(col_idx).to(torch.int32), torch.tensor(values)
         return row_idx, col_idx, values
 
     @property
