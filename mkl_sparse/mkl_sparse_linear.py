@@ -39,10 +39,11 @@ class sparse_linear(torch.nn.Module):
                         continue
                     col_idx.append(j)
                     values.append(data.data[i][j])
-        row_idx, col_idx, values = torch.tensor(
-            row_idx).to(torch.int32), torch.tensor(col_idx).to(torch.int32), torch.tensor(values)
+            row_idx.append(len(values))
+            row_idx, col_idx, values = torch.tensor(
+                row_idx).to(torch.int32), torch.tensor(col_idx).to(torch.int32), torch.tensor(values)
         return row_idx, col_idx, values
 
     @property
     def sparsity_ratio(self):
-        return self.out_features * self.in_features / self.values.size(0)
+        return  1 - self.values.size(0) / (self.out_features * self.in_features) 

@@ -48,7 +48,9 @@ sparse_status_t mkl_sparse_mm<float>(
     int M)
 {
     sparse_status_t status;
-    status = mkl_sparse_s_mm(SPARSE_OPERATION_NON_TRANSPOSE, alpha, SA, descr, SPARSE_LAYOUT_ROW_MAJOR, B, N, K, beta, C, M);
+    printf("Checkpoint_4\n");
+    printf("N:%d  K:%d M:%d\n", N, K, M);
+    status = mkl_sparse_s_mm(SPARSE_OPERATION_NON_TRANSPOSE, alpha, SA, descr, SPARSE_LAYOUT_ROW_MAJOR, B, N, N, beta, C, N);
     return status;
 }
 
@@ -96,18 +98,22 @@ int mkl_spmm(
 {
     sparse_matrix_t SA;
     sparse_status_t status;
+    printf("Checkpoint_2\n");
+
     status = mkl_create_csr<scalar_t>(&SA, M, K, row_index, &(row_index[1]), col_index, values);
     if (status != SPARSE_STATUS_SUCCESS)
     {
         printf("CSR Sparse matrix created failed.\n");
         return -2;
     }
+    printf("Checkpoint_3\n");
+
     matrix_descr descr;
     descr.type = SPARSE_MATRIX_TYPE_GENERAL;
     descr.mode = SPARSE_FILL_MODE_LOWER;
     descr.diag = SPARSE_DIAG_NON_UNIT;
     status = mkl_sparse_set_mm_hint(SA, SPARSE_OPERATION_NON_TRANSPOSE, descr, SPARSE_LAYOUT_ROW_MAJOR, K, 1);
-
+    printf("Checkpoint_4\n");
     if (status != SPARSE_STATUS_SUCCESS)
     {
         printf("CSR Sparse matrix created failed.\n");
@@ -115,6 +121,7 @@ int mkl_spmm(
     }
 
     status = mkl_sparse_mm<scalar_t>(alpha, SA, descr, MB, N, K, beta, MC, M);
+    printf("Checkpoint_5\n");
     if (status != SPARSE_STATUS_SUCCESS)
     {
         printf("Sparse MM failed!!!!\n");
@@ -136,6 +143,7 @@ at::Tensor mkl_sparse_linear_forward(
     // MKL sparse only support: sparse matrix * dense matrix
     torch::Tensor t_input = input.t();
     torch::Tensor t_output = torch::zeros({out_features, batchsize});
+    printf("Checkpoint_1\n");
     AT_DISPATCH_FLOATING_TYPES(input.type(), "mkl_sparse_linear_forward", ([&] {
                                    mkl_spmm(
                                        out_features,
