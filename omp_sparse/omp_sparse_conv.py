@@ -20,14 +20,15 @@ class dense_conv(torch.nn.Module):
         if hasattr(ori_conv, 'bias') and ori_conv.bias is not None:
             self.bias = ori_conv.bias
         else:
-            self.bias = None
-        self.padding = ori_conv.padding
+            self.bias = torch.zeros(1)
+        self.padding = ori_conv.padding[0]
         self.groups = ori_conv.groups
-        self.stride = ori_conv.stride
-        self.dilation = ori_conv.dilation
-        
+        self.stride = ori_conv.stride[0]
+        print(ori_conv.stride)
+        self.dilation = ori_conv.dilation[0]
+
     def forward(self, data):
-        return omp_sparse_conv_cpp.dense_forward(data, self.weight, self.bias, self.padding, self.dilation, self.stride, self.groups)
+        return omp_sparse_conv_cpp.dense_forward(data, self.weight, self.bias, self.padding, self.dilation, self.groups, self.stride)
 
     def backward(self, *args):
         raise Exception('Current the sparse linear only support inference')

@@ -5,6 +5,7 @@
 std::tuple<int, int> calculate_resolution(int ori_h, int ori_w, int kernel, int padding, int stride, int dilation)
 {
     // Calculate the output resolution of the output tensor
+    // printf("calculating output size: h:%d kernel:%d padding:%d stride:%d\n",ori_h, kernel, padding, stride);
     int h, w;
     h = int((ori_h + 2 * padding - kernel) / stride) + 1;
     w = int((ori_w + 2 * padding - kernel) / stride) + 1;
@@ -55,9 +56,10 @@ void _omp_dense_conv_forward(
         h_start -= padding;
         h_end += padding;
         w_start -= padding;
-        w_end -= padding;
+        w_end += padding;
     }
-
+    // printf("$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n");
+    // printf("hstart:%d hend:%d wstart:%d wend:%d\n",h_start, h_end, w_start, w_end);
 // compute the tiling here
 #pragma omp parallel for collapse(2)
     for (int b = 0; b < batch_size; b++)
@@ -80,16 +82,23 @@ void _omp_dense_conv_forward(
                             {
                                 int cur_h = h + i;
                                 int cur_w = w + j;
+                                // printf("current position: batch:%d out_c:%d in_c:%d h:%d w:%d\n",b, oc, ic, h, w);
+                                // printf("i:%d j:%d, cur_h:%d, cur_w:%d , in_h:%d in_w:%d\n",i, j, cur_h, cur_w, in_h, in_w);
                                 if (__builtin_expect(cur_h >= 0 && cur_w >= 0 && cur_h < in_h && cur_w < in_w, true))
                                 {
-                                    tmp += weight[calculate_index(oc, w_s_1, ic, w_s_2, i, w_s_3, j, w_s_3)] *
+                                    // printf("weight offset %d weight:%f\n",calculate_index(oc, w_s_1, ic, w_s_2, i, w_s_4, j, w_s_3), weight[calculate_index(oc, w_s_1, ic, w_s_2, i, w_s_3, j, w_s_4)]);
+                                    // printf("input offset %d input:%f \n",calculate_index(b, i_s_1, ic, i_s_2, cur_h, i_s_3, cur_w, i_s_4), input[calculate_index(b, i_s_1, ic, i_s_2, cur_h, i_s_3, cur_w, i_s_4)]);
+
+                                    tmp += weight[calculate_index(oc, w_s_1, ic, w_s_2, i, w_s_3, j, w_s_4)] *
                                            input[calculate_index(b, i_s_1, ic, i_s_2, cur_h, i_s_3, cur_w, i_s_4)];
+                                    // printf("tmp :%f\n", tmp);
                                     // tmp += weight[oc][ic][i][j] * input[b][ic][cur_h][cur_w];
                                 }
                             }
                         }
                         // output[b][oc][h + kernel / 2][w + kernel / 2] += tmp
-                        output[calculate_index(b, o_s_1, oc, o_s_2, h + kernel / 2, o_s_3, w + kernel / 2, o_s_4)] += tmp;
+                        // printf("Output offset %d\n",calculate_index(b, o_s_1, oc, o_s_2, int((h+padding)/stride), o_s_3, int((w+padding)/stride), o_s_4));
+                        output[calculate_index(b, o_s_1, oc, o_s_2, int((h+padding)/stride), o_s_3, int((w+padding)/stride), o_s_4)] += tmp;
                     }
                 }
             }
@@ -116,11 +125,15 @@ at::Tensor omp_dense_conv2d_forward(
     // [out_channels, in_channels, kernel_size, kernel_size]
     int kernel = weight.size(2);
     auto out_size = calculate_resolution(ori_h, ori_w, kernel, padding, stride, dilation);
+    
     int out_h = std::get<0>(out_size);
     int out_w = std::get<1>(out_size);
+    // printf("Output size %d %d\n", out_h, out_w);
     torch::Tensor output = torch::zeros({
         batch_size,
         out_channels,
+        out_h,
+        out_w
     });
     AT_DISPATCH_FLOATING_TYPES(input.type(), "omp_dense_conv", ([&] {
                                    _omp_dense_conv_forward(
