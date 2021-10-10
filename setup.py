@@ -12,8 +12,8 @@ ext_modules = []
 
 # Add the extral module of mkl sparse
 mkl_sparse_ext = CppExtension(name='mkl_sparse_linear_cpp', sources=[
-                              'mkl_sparse/mkl_spmm.cpp'],
-                              extra_compile_args=['-lmkl_core', '-lmkl_rt', '-O3', '-D_GLIBCXX_USE_CXX11_ABI=0'])
+                              'mkl_sparse/mkl_spmm.cpp', 'mkl_sparse/mkl_sparse_conv.cpp'],
+                              extra_compile_args=['-lmkl_core', '-lmkl_rt', '-fopenmp', '-Imkl_sparse', '-O3', '-D_GLIBCXX_USE_CXX11_ABI=0'])
 
 omp_sparse_ext = CppExtension(name='omp_sparse_conv_cpp', sources=[
                               'omp_sparse/omp_sparse_conv.cpp'],

@@ -1,10 +1,4 @@
-#include <vector>
-#include <fstream>
-#include <iostream>
-#include <torch/extension.h>
-#include "mkl.h"
-#include "mkl_spblas.h"
-#include "mkl_types.h"
+#include "common.h"
 
 template<typename scalar_t>
 void debug_show(int * row_index, int n_row, int * col_index, scalar_t * value){
